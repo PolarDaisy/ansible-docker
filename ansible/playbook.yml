@@ -1,0 +1,42 @@
+---
+- hosts: all
+  vars_files:
+    - ../ansible/secrets.yml
+  tasks:
+    - name: Copy src to remote
+      synchronize:
+        src: ../src
+        dest: /var/www/app
+
+    - name: Copy Dockerfile and conf to remote
+      synchronize:
+        src: ../docker
+        dest: /var/www/app/docker/
+
+    - name: Generate nginx config
+      template:
+        src: ../docker/default.conf
+        dest: /etc/nginx/conf.d/default.conf
+      notify:
+        - restart nginx
+
+    - name: Copy docker compose to remote
+      copy:
+        src: ../docker-compose.yml
+        dest: /var/www/app/
+      notify:
+        - restart containers
+
+    - name: Ensure docker-compose is running
+      docker_service:
+        project_src: /var/www/app/
+        state: present
+      notify:
+        - restart containers
+
+  handlers:
+    - name: restart nginx
+      shell: "systemctl reload nginx"
+
+    - name: restart containers
+      shell: "cd /var/www/app && docker-compose down && docker-compose up -d"
