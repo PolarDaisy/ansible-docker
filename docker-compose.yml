@@ -1,0 +1,23 @@
+version: '3'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - db
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: "{{ mysql.root_password }}"
+      MYSQL_DATABASE: "{{ mysql.database }}"
+      MYSQL_USER: "{{ mysql.user }}"
+      MYSQL_PASSWORD: "{{ mysql.password }}"
+    volumes:
+      - db_data:/var/lib/mysql
+volumes:
+  db_data: {}
